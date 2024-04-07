@@ -252,7 +252,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-            Lab5.task2.task();
+            Lab5.task7.task();
 
 
     }
