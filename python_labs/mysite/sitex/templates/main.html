@@ -1,0 +1,10 @@
+{% extends "home.html" %}
+
+{% block content %}
+<title>homepage</title>
+  {% if user.is_authenticated %}
+  {% else %}
+    <h2>you must register or login</h2>
+  {% endif %}
+</div>
+{% endblock content %}
