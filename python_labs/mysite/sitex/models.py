@@ -82,8 +82,9 @@ roles = {
 class UserLastCurrency(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    curencyfrom = models.CharField(max_length=255)
-    curencyto = models.CharField(max_length=255)
+    currencyfrom = models.CharField(max_length=255)
+    currencyto = models.CharField(max_length=255)
+    amount = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'Currency'

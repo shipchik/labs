@@ -1,10 +1,12 @@
+import requests
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.http import url_has_allowed_host_and_scheme
-
-from .forms import UserForm, RegisterForm, LoginForm
+from .models import UserLastCurrency
+from .forms import UserForm, RegisterForm, LoginForm, convertForm
 
 
 # Create your views here.
@@ -16,15 +18,67 @@ def index(request):
 
 
 def home(request):
-    if request.user == AnonymousUser():
-        return render(request,'main.html',)
-    return render(request,'home.html', {'name': request.user.nickname})
+    if request.user.is_anonymous:
+        return render(request, 'main.html')
+
+    if request.method == "POST":
+        form = convertForm(request.POST)
+        if form.is_valid():
+            print('valid')
+            currency1 = form.cleaned_data['fcurrency']
+            currency2 = form.cleaned_data['tcurrency']
+            amount = form.cleaned_data['amount']
+
+            if amount < 0:
+                return render(request, 'main.html', {
+                    'form': form,
+                    'name': request.user.nickname,
+                    'result': "Сумма должна быть положительной"
+                })
+            print(currency1,currency2)
+
+            url = f"https://api.frankfurter.dev/v1/latest?base={currency1}&symbols={currency2}&amount={amount}"
+            print(url)
+
+            resp = requests.get(url).json()
+
+            updated_values = {
+                'amount': amount,
+                'currencyfrom': currency1,
+                'currencyto': currency2,
+            }
+            UserLastCurrency.objects.update_or_create(
+                user_id=request.user.id,
+                defaults=updated_values
+            )
+            print(resp)
+
+            context = {
+                'form': form,
+                'name': request.user.nickname,
+                'result': resp.get('rates', 'Ошибка API').get(currency2,'Ошибка API'),
+            }
+            return render(request, 'main.html', context)
+        else:
+            print("Ошибки формы:", form.errors)
+    else:
+        form = convertForm()
+
+    return render(request, 'main.html', {
+        'form': form,
+        'name': request.user.nickname
+    })
+
 
 def profile_page(request):
+    info = UserLastCurrency.objects.get(user_id=request.user.id)
     context = {
         'name': request.user.nickname,
         'email': request.user.email,
         'role': request.user.role,
+        'fcurrency': info.currencyfrom,
+        'tcurrency': info.currencyto,
+        'amount': info.amount,
     }
     return render(request,'profile.html',context)
 

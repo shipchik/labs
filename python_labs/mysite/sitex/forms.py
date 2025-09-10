@@ -41,3 +41,15 @@ class LoginForm(forms.Form):
         'placeholder': 'Password',
         'class': 'logform',
     }))
+
+
+class convertForm(forms.Form):
+    Options = (
+        ('EUR','EUR'),
+        ('RUB','RUB'),
+        ('USD','USD'),
+        ('BYN','BYN'),
+    )
+    fcurrency = forms.ChoiceField(choices=Options,label='From',widget=forms.Select())
+    tcurrency = forms.ChoiceField(choices=Options,label='To',widget=forms.Select())
+    amount = forms.IntegerField(label='Amount')
